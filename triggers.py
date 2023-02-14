@@ -64,10 +64,14 @@ class Triggers(EuroPiScript):
             
         @din.handler
         def clock():
-            self.current_step += 1
+            self.current_step = (self.current_step + 1) % STEPS
             self.update_cvs()
 
-
+        @din.handler_falling
+        def reset_cvs():
+            for i in range(TRACKS):
+                self.cvs[i].value(False)
+        
     @classmethod
     def display_name(cls):
         return "Triggers"
