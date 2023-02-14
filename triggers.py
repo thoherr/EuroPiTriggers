@@ -38,6 +38,7 @@ STEPS=16
 class Triggers(EuroPiScript):
 
     initial_state = [ [False] * STEPS for _ in range(TRACKS) ]
+    cvs = [ cv1, cv2, cv3, cv4, cv5, cv6 ]
 
     def __init__(self):
         super().__init__()
@@ -59,10 +60,21 @@ class Triggers(EuroPiScript):
         @b2.handler
         def reset():
             self.current_step = 0
+            self.update_cvs()
+            
+        @din.handler
+        def clock():
+            self.current_step += 1
+            self.update_cvs()
+
 
     @classmethod
     def display_name(cls):
         return "Triggers"
+
+    def update_cvs(self):
+        for i in range(TRACKS):
+            self.cvs[i].value(self.state[i][self.current_step])
 
     def read_cursor(self):
         self.cursor_track = k1.range(TRACKS)
