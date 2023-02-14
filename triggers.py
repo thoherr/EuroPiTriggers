@@ -50,10 +50,15 @@ class Triggers(EuroPiScript):
         # TODO: load state here and save it on changes
         self.state = self.initial_state
 
+        @b1.handler
+        def toggle_step():
+            self.state[self.cursor_track][self.cursor_step] ^= 1
+
+
     @classmethod
     def display_name(cls):
         return "Triggers"
-    
+
     def read_cursor(self):
         self.cursor_track = k1.range(TRACKS)
         self.cursor_step = k2.range(STEPS)
