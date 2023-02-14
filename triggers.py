@@ -35,27 +35,28 @@ VERSION = "0.1"
 TRACKS=6
 STEPS=16
 
+SAVE_STATE_INTERVAL=5000
+
 class Triggers(EuroPiScript):
 
     initial_state = [ [False] * STEPS for _ in range(TRACKS) ]
+    state_saved = True
     cvs = [ cv1, cv2, cv3, cv4, cv5, cv6 ]
 
     def __init__(self):
         super().__init__()
 
-        # Configure EuroPi options to improve performance ??
-        b1.debounce_delay = 200
-        b2.debounce_delay = 200
-        oled.contrast(0)  # dim the oled
+        oled.contrast(0)
         
-        # TODO: load state here and save it on changes
         self.state = self.initial_state
+        self.load_state()
 
         self.current_step = 0
 
         @b1.handler
         def toggle_step():
             self.state[self.cursor_track][self.cursor_step] ^= 1
+            self.state_saved = False
 
         @b2.handler
         def reset():
@@ -71,10 +72,24 @@ class Triggers(EuroPiScript):
         def reset_cvs():
             for i in range(TRACKS):
                 self.cvs[i].value(False)
-        
+
     @classmethod
     def display_name(cls):
         return "Triggers"
+
+    def save_state(self):
+        if self.state_saved or self.last_saved() < SAVE_STATE_INTERVAL:
+            return
+        self.save_state_str('\n'.join(''.join('1' if i else '0'
+                                                for i in self.state[j])
+                                        for j in range(TRACKS)))
+        self.state_saved = True
+
+    def load_state(self):
+        state = self.load_state_str()
+        if state:
+            tracks = state.splitlines()
+            self.state = [ [c == '1' for c in tracks[i] ] for i in range(TRACKS) ]
 
     def update_cvs(self):
         for i in range(TRACKS):
@@ -108,7 +123,6 @@ class Triggers(EuroPiScript):
         while True:
             oled.fill(0)
 
-            # cursor navigation
             self.read_cursor()
 
             for i in range(TRACKS):
@@ -119,7 +133,7 @@ class Triggers(EuroPiScript):
 
             oled.show()
 
-            # self.save_state()
+            self.save_state()
 
 # Main script execution
 if __name__ == '__main__':
