@@ -53,11 +53,11 @@ class Triggers(EuroPiScript):
 
         oled.contrast(0)
         
-        self.state = self.initial_state
-        self.load_state()
-
         self.steps = STEPS
+        self.state = self.initial_state
         self.current_step = 0
+
+        self.load_state()
 
         @b1.handler_falling
         def handle_falling_b1():
@@ -75,6 +75,7 @@ class Triggers(EuroPiScript):
             time_pressed = ticks_diff(ticks_ms(), b2.last_pressed())
             if time_pressed >= SHORT_PRESSED_INTERVAL:
                 self.set_step_count()
+                self.state_saved = False
             else:
                 self.jump_to_start()
             
@@ -97,7 +98,7 @@ class Triggers(EuroPiScript):
             return
         self.save_state_str('\n'.join(''.join('1' if i else '0'
                                                 for i in self.state[j])
-                                        for j in range(TRACKS)))
+                                        for j in range(TRACKS)) + '\n' + str(self.steps))
         self.state_saved = True
 
     def load_state(self):
@@ -105,6 +106,7 @@ class Triggers(EuroPiScript):
         if state:
             tracks = state.splitlines()
             self.state = [ [c == '1' for c in tracks[i] ] for i in range(TRACKS) ]
+            self.steps = int(tracks[TRACKS])
 
     def set_step_count(self):
         self.steps = self.cursor_step + 1
