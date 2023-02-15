@@ -27,6 +27,7 @@ cv6: track 6
 """
 
 from time import sleep
+from utime import ticks_diff, ticks_ms
 from europi import oled, din, k1, k2, b1, b2, cv1, cv2, cv3, cv4, cv5, cv6, OLED_WIDTH, OLED_HEIGHT, CHAR_HEIGHT
 from europi_script import EuroPiScript
 
@@ -36,6 +37,8 @@ TRACKS=6
 STEPS=16
 
 SAVE_STATE_INTERVAL=5000
+CLEAR_CURRENT_TRACK_TIME=600  # feels about 1 second
+CLEAR_ALL_TRACKS_TIME=2400 # feels about 4 seconds
 
 class Triggers(EuroPiScript):
 
@@ -53,9 +56,15 @@ class Triggers(EuroPiScript):
 
         self.current_step = 0
 
-        @b1.handler
-        def toggle_step():
-            self.state[self.cursor_track][self.cursor_step] ^= 1
+        @b1.handler_falling
+        def handle_falling_b1():
+            time_pressed = ticks_diff(ticks_ms(), b1.last_pressed())
+            if time_pressed >= CLEAR_ALL_TRACKS_TIME:
+                self.clear_all_tracks()
+            elif time_pressed >= CLEAR_CURRENT_TRACK_TIME:
+                self.clear_current_track()
+            else:
+                self.toggle_step()
             self.state_saved = False
 
         @b2.handler
@@ -94,6 +103,18 @@ class Triggers(EuroPiScript):
     def update_cvs(self):
         for i in range(TRACKS):
             self.cvs[i].value(self.state[i][self.current_step])
+
+    def clear_all_tracks(self):
+        for i in range(TRACKS):
+            for j in range(STEPS):
+                self.state[i][j] = False
+
+    def clear_current_track(self):
+        for j in range(STEPS):
+            self.state[self.cursor_track][j] = False
+
+    def toggle_step(self):
+        self.state[self.cursor_track][self.cursor_step] ^= 1
 
     def read_cursor(self):
         self.cursor_track = k1.range(TRACKS)
