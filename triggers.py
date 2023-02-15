@@ -11,10 +11,12 @@ and screen real estate.
 din: clock
 ain: not used
 
-k1: select track (1-6
+k1: select track (1-6)
 k2: select sequence step (1-16)
 
-b1: toggle step at cursor (on/off)
+b1: toggle step at cursor (on/off),
+    clear all steps in current track when pressed for 1-3 seconds,
+    clear all steps when pressed for 4 seconds or longer
 b2: reset sequence to step 1
 
 cv1: track 1
