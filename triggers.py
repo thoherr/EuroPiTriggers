@@ -17,7 +17,8 @@ k2: select sequence step (1-16)
 b1: toggle step at cursor (on/off),
     clear all steps in current track when pressed for 1-3 seconds,
     clear all steps when pressed for 4 seconds or longer
-b2: reset sequence to step 1
+b2: reset sequence to step 1,
+    set end of sequence when pressed for one second
 
 cv1: track 1
 cv2: track 2
