@@ -39,8 +39,8 @@ TRACKS=6
 STEPS=16
 
 SAVE_STATE_INTERVAL=5000
-CLEAR_CURRENT_TRACK_TIME=600  # feels about 1 second
-CLEAR_ALL_TRACKS_TIME=2400 # feels about 4 seconds
+SHORT_PRESSED_INTERVAL=600  # feels about 1 second
+LONG_PRESSED_INTERVAL=2400 # feels about 4 seconds
 
 class Triggers(EuroPiScript):
 
@@ -61,9 +61,9 @@ class Triggers(EuroPiScript):
         @b1.handler_falling
         def handle_falling_b1():
             time_pressed = ticks_diff(ticks_ms(), b1.last_pressed())
-            if time_pressed >= CLEAR_ALL_TRACKS_TIME:
+            if time_pressed >= LONG_PRESSED_INTERVAL:
                 self.clear_all_tracks()
-            elif time_pressed >= CLEAR_CURRENT_TRACK_TIME:
+            elif time_pressed >= SHORT_PRESSED_INTERVAL:
                 self.clear_current_track()
             else:
                 self.toggle_step()
