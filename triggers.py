@@ -56,6 +56,7 @@ class Triggers(EuroPiScript):
         self.state = self.initial_state
         self.load_state()
 
+        self.steps = STEPS
         self.current_step = 0
 
         @b1.handler_falling
@@ -69,14 +70,17 @@ class Triggers(EuroPiScript):
                 self.toggle_step()
             self.state_saved = False
 
-        @b2.handler
-        def reset():
-            self.current_step = 0
-            self.update_cvs()
+        @b2.handler_falling
+        def handle_falling_b2():
+            time_pressed = ticks_diff(ticks_ms(), b2.last_pressed())
+            if time_pressed >= SHORT_PRESSED_INTERVAL:
+                self.set_step_count()
+            else:
+                self.jump_to_start()
             
         @din.handler
         def clock():
-            self.current_step = (self.current_step + 1) % STEPS
+            self.current_step = (self.current_step + 1) % self.steps
             self.update_cvs()
 
         @din.handler_falling
@@ -102,6 +106,15 @@ class Triggers(EuroPiScript):
             tracks = state.splitlines()
             self.state = [ [c == '1' for c in tracks[i] ] for i in range(TRACKS) ]
 
+    def set_step_count(self):
+        self.steps = self.cursor_step + 1
+        if self.current_step > self.cursor_step:
+            self.jump_to_start()
+
+    def jump_to_start(self):
+        self.current_step = 0
+        self.update_cvs()
+
     def update_cvs(self):
         for i in range(TRACKS):
             self.cvs[i].value(self.state[i][self.current_step])
@@ -122,7 +135,7 @@ class Triggers(EuroPiScript):
         self.cursor_track = k1.range(TRACKS)
         self.cursor_step = k2.range(STEPS)
 
-    def paint_state(self, track, step, status):
+    def paint_single_step_state(self, track, step, status):
         y = 1 + int((OLED_HEIGHT/TRACKS) * track)
         height = int(OLED_HEIGHT/TRACKS) - 1
         x = 2 + int((OLED_WIDTH/STEPS) * step)
@@ -134,11 +147,15 @@ class Triggers(EuroPiScript):
         if track == self.cursor_track and step == self.cursor_step:
             oled.rect(x, y, width, height, 0)
 
-    def paint_step(self, step):
+    def paint_current_step_position(self, step):
         x = 1 + int((OLED_WIDTH/STEPS) * step)
         length = int(OLED_WIDTH/STEPS)
         oled.hline(x, 0, length, 1)
         oled.hline(x, OLED_HEIGHT-1, length, 1)
+
+    def paint_end_of_loop(self, step):
+        x = int((OLED_WIDTH/STEPS) * step)
+        oled.vline(x, 0, OLED_HEIGHT, 1)
 
     def main(self):
         oled.centre_text(f"EuroPi Triggers\n{VERSION}")
@@ -150,9 +167,12 @@ class Triggers(EuroPiScript):
 
             for i in range(TRACKS):
                 for j in range(STEPS):
-                    self.paint_state(i, j, self.state[i][j])
+                    self.paint_single_step_state(i, j, self.state[i][j])
 
-            self.paint_step(self.current_step)
+            self.paint_current_step_position(self.current_step)
+
+            if self.steps < STEPS:
+                self.paint_end_of_loop(self.steps)
 
             oled.show()
 
