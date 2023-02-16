@@ -60,7 +60,7 @@ class Triggers(EuroPiScript):
 
         self.load_state()
 
-        self.display_needs_update = True
+        self.display_data_changed = True
 
         @b1.handler_falling
         def handle_falling_b1():
@@ -72,7 +72,7 @@ class Triggers(EuroPiScript):
             else:
                 self.toggle_step()
             self.state_saved = False
-            self.display_needs_update = True
+            self.display_data_changed = True
 
         @b2.handler_falling
         def handle_falling_b2():
@@ -82,7 +82,7 @@ class Triggers(EuroPiScript):
                 self.state_saved = False
             else:
                 self.jump_to_start()
-            self.display_needs_update = True
+            self.display_data_changed = True
 
         @din.handler
         def clock():
@@ -129,25 +129,25 @@ class Triggers(EuroPiScript):
     def update_cvs(self):
         for i in range(TRACKS):
             self.cvs[i].value(self.state[i][self.current_step])
-        self.display_needs_update = True
+        self.display_data_changed = True
 
 
     def clear_all_tracks(self):
         for i in range(TRACKS):
             for j in range(STEPS):
                 self.state[i][j] = False
-        self.display_needs_update = True
+        self.display_data_changed = True
 
 
     def clear_current_track(self):
         for j in range(STEPS):
             self.state[self.cursor_track][j] = False
-        self.display_needs_update = True
+        self.display_data_changed = True
 
 
     def toggle_step(self):
         self.state[self.cursor_track][self.cursor_step] ^= 1
-        self.display_needs_update = True
+        self.display_data_changed = True
 
 
     def read_cursor(self):
@@ -177,7 +177,7 @@ class Triggers(EuroPiScript):
         oled.vline(x, 0, OLED_HEIGHT, 1)
 
     def update_display(self):
-        if self.display_needs_update:
+        if self.display_data_changed:
             oled.fill(0)
 
             for i in range(TRACKS):
@@ -191,7 +191,7 @@ class Triggers(EuroPiScript):
 
             oled.show()
             
-            display_needs_update = False
+            display_data_changed = False
 
     def main(self):
         oled.centre_text(f"EuroPi Triggers\n{VERSION}")
