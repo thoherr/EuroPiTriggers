@@ -60,6 +60,8 @@ class Triggers(EuroPiScript):
 
         self.load_state()
 
+        self.display_needs_update = True
+
         @b1.handler_falling
         def handle_falling_b1():
             time_pressed = ticks_diff(ticks_ms(), b1.last_pressed())
@@ -70,6 +72,7 @@ class Triggers(EuroPiScript):
             else:
                 self.toggle_step()
             self.state_saved = False
+            self.display_needs_update = True
 
         @b2.handler_falling
         def handle_falling_b2():
@@ -79,6 +82,7 @@ class Triggers(EuroPiScript):
                 self.state_saved = False
             else:
                 self.jump_to_start()
+            self.display_needs_update = True
 
         @din.handler
         def clock():
@@ -125,18 +129,26 @@ class Triggers(EuroPiScript):
     def update_cvs(self):
         for i in range(TRACKS):
             self.cvs[i].value(self.state[i][self.current_step])
+        self.display_needs_update = True
+
 
     def clear_all_tracks(self):
         for i in range(TRACKS):
             for j in range(STEPS):
                 self.state[i][j] = False
+        self.display_needs_update = True
+
 
     def clear_current_track(self):
         for j in range(STEPS):
             self.state[self.cursor_track][j] = False
+        self.display_needs_update = True
+
 
     def toggle_step(self):
         self.state[self.cursor_track][self.cursor_step] ^= 1
+        self.display_needs_update = True
+
 
     def read_cursor(self):
         self.cursor_track = k1.range(TRACKS)
@@ -164,13 +176,9 @@ class Triggers(EuroPiScript):
         x = int((OLED_WIDTH / STEPS) * step)
         oled.vline(x, 0, OLED_HEIGHT, 1)
 
-    def main(self):
-        oled.centre_text(f"EuroPi Triggers\n{VERSION}")
-        sleep(1)
-        while True:
+    def update_display(self):
+        if self.display_needs_update:
             oled.fill(0)
-
-            self.read_cursor()
 
             for i in range(TRACKS):
                 for j in range(STEPS):
@@ -182,8 +190,17 @@ class Triggers(EuroPiScript):
                 self.paint_end_of_loop(self.steps)
 
             oled.show()
+            
+            display_needs_update = False
 
+    def main(self):
+        oled.centre_text(f"EuroPi Triggers\n{VERSION}")
+        sleep(1)
+        while True:
+            self.read_cursor()
+            self.update_display()
             self.save_state()
+            sleep(0.01)
 
 
 # Main script execution
