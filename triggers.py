@@ -31,29 +31,29 @@ cv6: track 6
 
 from time import sleep
 from utime import ticks_diff, ticks_ms
-from europi import oled, din, k1, k2, b1, b2, cv1, cv2, cv3, cv4, cv5, cv6, OLED_WIDTH, OLED_HEIGHT, CHAR_HEIGHT
+from europi import *
 from europi_script import EuroPiScript
 
 VERSION = "0.1"
 
-TRACKS=6
-STEPS=16
+TRACKS = 6
+STEPS = 16
 
-SAVE_STATE_INTERVAL=5000
-SHORT_PRESSED_INTERVAL=600  # feels about 1 second
-LONG_PRESSED_INTERVAL=2400 # feels about 4 seconds
+SAVE_STATE_INTERVAL = 5000
+SHORT_PRESSED_INTERVAL = 600  # feels about 1 second
+LONG_PRESSED_INTERVAL = 2400  # feels about 4 seconds
+
 
 class Triggers(EuroPiScript):
-
-    initial_state = [ [False] * STEPS for _ in range(TRACKS) ]
+    initial_state = [[False] * STEPS for _ in range(TRACKS)]
     state_saved = True
-    cvs = [ cv1, cv2, cv3, cv4, cv5, cv6 ]
+    cvs = [cv1, cv2, cv3, cv4, cv5, cv6]
 
     def __init__(self):
         super().__init__()
 
         oled.contrast(0)
-        
+
         self.steps = STEPS
         self.state = self.initial_state
         self.current_step = 0
@@ -79,7 +79,7 @@ class Triggers(EuroPiScript):
                 self.state_saved = False
             else:
                 self.jump_to_start()
-            
+
         @din.handler
         def clock():
             self.current_step = (self.current_step + 1) % self.steps
@@ -97,16 +97,20 @@ class Triggers(EuroPiScript):
     def save_state(self):
         if self.state_saved or self.last_saved() < SAVE_STATE_INTERVAL:
             return
-        self.save_state_str('\n'.join(''.join('1' if i else '0'
-                                                for i in self.state[j])
-                                        for j in range(TRACKS)) + '\n' + str(self.steps))
+        self.save_state_str(
+            "\n".join(
+                "".join("1" if i else "0" for i in self.state[j]) for j in range(TRACKS)
+            )
+            + "\n"
+            + str(self.steps)
+        )
         self.state_saved = True
 
     def load_state(self):
         state = self.load_state_str()
         if state:
             tracks = state.splitlines()
-            self.state = [ [c == '1' for c in tracks[i] ] for i in range(TRACKS) ]
+            self.state = [[c == "1" for c in tracks[i]] for i in range(TRACKS)]
             self.steps = int(tracks[TRACKS])
 
     def set_step_count(self):
@@ -139,10 +143,10 @@ class Triggers(EuroPiScript):
         self.cursor_step = k2.range(STEPS)
 
     def paint_single_step_state(self, track, step, status):
-        y = 1 + int((OLED_HEIGHT/TRACKS) * track)
-        height = int(OLED_HEIGHT/TRACKS) - 1
-        x = 2 + int((OLED_WIDTH/STEPS) * step)
-        width = int(OLED_WIDTH/STEPS) - 2
+        y = 1 + int((OLED_HEIGHT / TRACKS) * track)
+        height = int(OLED_HEIGHT / TRACKS) - 1
+        x = 2 + int((OLED_WIDTH / STEPS) * step)
+        width = int(OLED_WIDTH / STEPS) - 2
         if status:
             oled.fill_rect(x, y, width, height, 1)
         else:
@@ -151,13 +155,13 @@ class Triggers(EuroPiScript):
             oled.rect(x, y, width, height, 0)
 
     def paint_current_step_position(self, step):
-        x = 1 + int((OLED_WIDTH/STEPS) * step)
-        length = int(OLED_WIDTH/STEPS)
+        x = 1 + int((OLED_WIDTH / STEPS) * step)
+        length = int(OLED_WIDTH / STEPS)
         oled.hline(x, 0, length, 1)
-        oled.hline(x, OLED_HEIGHT-1, length, 1)
+        oled.hline(x, OLED_HEIGHT - 1, length, 1)
 
     def paint_end_of_loop(self, step):
-        x = int((OLED_WIDTH/STEPS) * step)
+        x = int((OLED_WIDTH / STEPS) * step)
         oled.vline(x, 0, OLED_HEIGHT, 1)
 
     def main(self):
@@ -181,7 +185,8 @@ class Triggers(EuroPiScript):
 
             self.save_state()
 
+
 # Main script execution
-if __name__ == '__main__':
+if __name__ == "__main__":
     script = Triggers()
     script.main()
