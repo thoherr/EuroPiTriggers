@@ -1,24 +1,31 @@
 """
-Euro Pi Triggers - simple 6 track 16 step trigger sequencer for Euro Pi
+Euro Pi Triggers - simple 6 track 8/16/24 step trigger sequencer for Euro Pi
 author: Thomas Herrmann (github.com/thoherr)
 date: 2023-02-14
 labels: sequencer, trigger
 
 This script implements a simple trigger sequencer with an easy to use interface to change
-the 6 sequences. It makes full use of the limited resources on Euro Pi, esp. the outputs
+the 6 sequences.
+
+It makes full use of the limited resources on Euro Pi, esp. the outputs
 and screen real estate.
+
+The total length of the sequence can be 8, 16 or 24 steps and can be changed on the fly.
+
+The script saves the patterns, the current loop length and the total length as state.
 
 din: clock
 ain: not used
 
 k1: select track (1-6)
-k2: select sequence step (1-16)
+k2: select sequence step (1-8/16/24)
 
 b1: toggle step at cursor (on/off),
     clear all steps in current track when pressed for 1-3 seconds,
     clear all steps when pressed for 4 seconds or longer
 b2: reset sequence to step 1,
-    set end of sequence when pressed for one second
+    set end of sequence (loop end point) when pressed for for 1-3 seconds,
+    switch to next sequence length (8, 16 or 24) when pressed for 4 seconds or longer
 
 cv1: track 1
 cv2: track 2
@@ -34,10 +41,11 @@ from utime import ticks_diff, ticks_ms
 from europi import *
 from europi_script import EuroPiScript
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 TRACKS = 6
-STEPS = 16
+MAX_STEPS = 24
+SEQUENCE_STEPS = [int(MAX_STEPS / 3), int(MAX_STEPS / 3 * 2), MAX_STEPS]
 
 SAVE_STATE_INTERVAL = 5000
 SHORT_PRESSED_INTERVAL = 600  # feels about 1 second
@@ -45,7 +53,7 @@ LONG_PRESSED_INTERVAL = 2400  # feels about 4 seconds
 
 
 class Triggers(EuroPiScript):
-    initial_state = [[False] * STEPS for _ in range(TRACKS)]
+    initial_state = [[False] * MAX_STEPS for _ in range(TRACKS)]
     state_saved = True
     cvs = [cv1, cv2, cv3, cv4, cv5, cv6]
 
@@ -54,7 +62,9 @@ class Triggers(EuroPiScript):
 
         oled.contrast(0)
 
-        self.steps = STEPS
+        self.sequence_step_index = 1
+        self.sequence_steps = SEQUENCE_STEPS[self.sequence_step_index]
+        self.looped_steps = self.sequence_steps
         self.state = self.initial_state
         self.current_step = 0
 
@@ -77,7 +87,10 @@ class Triggers(EuroPiScript):
         @b2.handler_falling
         def handle_falling_b2():
             time_pressed = ticks_diff(ticks_ms(), b2.last_pressed())
-            if time_pressed >= SHORT_PRESSED_INTERVAL:
+            if time_pressed >= LONG_PRESSED_INTERVAL:
+                self.iterate_sequence_steps()
+                self.state_saved = False
+            elif time_pressed >= SHORT_PRESSED_INTERVAL:
                 self.set_step_count()
                 self.state_saved = False
             else:
@@ -86,7 +99,7 @@ class Triggers(EuroPiScript):
 
         @din.handler
         def clock():
-            self.current_step = (self.current_step + 1) % self.steps
+            self.current_step = (self.current_step + 1) % self.looped_steps
             self.update_cvs()
 
         @din.handler_falling
@@ -106,7 +119,9 @@ class Triggers(EuroPiScript):
                 "".join("1" if i else "0" for i in self.state[j]) for j in range(TRACKS)
             )
             + "\n"
-            + str(self.steps)
+            + str(self.looped_steps)
+            + "\n"
+            + str(self.sequence_step_index)
         )
         self.state_saved = True
 
@@ -115,10 +130,21 @@ class Triggers(EuroPiScript):
         if state:
             tracks = state.splitlines()
             self.state = [[c == "1" for c in tracks[i]] for i in range(TRACKS)]
-            self.steps = int(tracks[TRACKS])
+            i = TRACKS
+            self.looped_steps = int(i)
+            i += 1
+            self.sequence_step_index = int(i)
+
+    def iterate_sequence_steps(self):
+        self.sequence_step_index = (self.sequence_step_index + 1) % len(SEQUENCE_STEPS)
+        self.sequence_steps = SEQUENCE_STEPS[self.sequence_step_index]
+        if self.looped_steps > self.sequence_steps:
+            self.looped_steps = self.sequence_steps
+        if self.current_step > self.sequence_steps:
+            self.jump_to_start()
 
     def set_step_count(self):
-        self.steps = self.cursor_step + 1
+        self.looped_steps = self.cursor_step + 1
         if self.current_step > self.cursor_step:
             self.jump_to_start()
 
@@ -131,34 +157,30 @@ class Triggers(EuroPiScript):
             self.cvs[i].value(self.state[i][self.current_step])
         self.display_data_changed = True
 
-
     def clear_all_tracks(self):
         for i in range(TRACKS):
-            for j in range(STEPS):
+            for j in range(MAX_STEPS):
                 self.state[i][j] = False
         self.display_data_changed = True
 
-
     def clear_current_track(self):
-        for j in range(STEPS):
+        for j in range(MAX_STEPS):
             self.state[self.cursor_track][j] = False
         self.display_data_changed = True
-
 
     def toggle_step(self):
         self.state[self.cursor_track][self.cursor_step] ^= 1
         self.display_data_changed = True
 
-
     def read_cursor(self):
         self.cursor_track = k1.range(TRACKS)
-        self.cursor_step = k2.range(STEPS)
+        self.cursor_step = k2.range(self.sequence_steps)
 
     def paint_single_step_state(self, track, step, status):
         y = 1 + int((OLED_HEIGHT / TRACKS) * track)
         height = int(OLED_HEIGHT / TRACKS) - 1
-        x = 2 + int((OLED_WIDTH / STEPS) * step)
-        width = int(OLED_WIDTH / STEPS) - 2
+        x = 2 + int((OLED_WIDTH / self.sequence_steps) * step)
+        width = int(OLED_WIDTH / self.sequence_steps) - 2
         if status:
             oled.fill_rect(x, y, width, height, 1)
         else:
@@ -167,13 +189,13 @@ class Triggers(EuroPiScript):
             oled.rect(x, y, width, height, 0)
 
     def paint_current_step_position(self, step):
-        x = 1 + int((OLED_WIDTH / STEPS) * step)
-        length = int(OLED_WIDTH / STEPS)
+        x = 1 + int((OLED_WIDTH / self.sequence_steps) * step)
+        length = int(OLED_WIDTH / self.sequence_steps)
         oled.hline(x, 0, length, 1)
         oled.hline(x, OLED_HEIGHT - 1, length, 1)
 
     def paint_end_of_loop(self, step):
-        x = int((OLED_WIDTH / STEPS) * step)
+        x = int((OLED_WIDTH / self.sequence_steps) * step)
         oled.vline(x, 0, OLED_HEIGHT, 1)
 
     def update_display(self):
@@ -181,16 +203,16 @@ class Triggers(EuroPiScript):
             oled.fill(0)
 
             for i in range(TRACKS):
-                for j in range(STEPS):
+                for j in range(self.sequence_steps):
                     self.paint_single_step_state(i, j, self.state[i][j])
 
             self.paint_current_step_position(self.current_step)
 
-            if self.steps < STEPS:
-                self.paint_end_of_loop(self.steps)
+            if self.looped_steps < self.sequence_steps:
+                self.paint_end_of_loop(self.looped_steps)
 
             oled.show()
-            
+
             display_data_changed = False
 
     def main(self):
