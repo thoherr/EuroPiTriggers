@@ -213,7 +213,7 @@ class Triggers(EuroPiScript):
 
             oled.show()
 
-            display_data_changed = False
+            self.display_data_changed = False
 
     def main(self):
         oled.centre_text(f"EuroPi Triggers\n{VERSION}")
