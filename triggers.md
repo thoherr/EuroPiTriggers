@@ -93,3 +93,8 @@ rectangle.
 | cv5 | track 5 (high = on, low = of at current step) |
 | cv6 | track 6 (high = on, low = of at current step) |
 
+## Enhancements / Ideas
+
+* Sequence length configurable per track. Problem here is probably the UI and the tiny display.
+* Storable Patterns, i.e. not only save the current pattern. One possibility would be to use numberated file names?
+
