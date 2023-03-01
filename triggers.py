@@ -1,38 +1,8 @@
 """
 Euro Pi Triggers - simple 6 track 8/16/24 step trigger sequencer for Euro Pi
 author: Thomas Herrmann (github.com/thoherr)
-date: 2023-02-14
-labels: sequencer, trigger
 
-This script implements a simple trigger sequencer with an easy to use interface to change
-the 6 sequences.
-
-It makes full use of the limited resources on Euro Pi, esp. the outputs
-and screen real estate.
-
-The total length of the sequence can be 8, 16 or 24 steps and can be changed on the fly.
-
-The script saves the patterns, the current loop length and the total length as state.
-
-din: clock
-ain: not used
-
-k1: select track (1-6)
-k2: select sequence step (1-8/16/24)
-
-b1: toggle step at cursor (on/off),
-    clear all steps in current track when pressed for 1-3 seconds,
-    clear all steps when pressed for 4 seconds or longer
-b2: reset sequence to step 1,
-    set end of sequence (loop end point) when pressed for for 1-3 seconds,
-    switch to next sequence length (8, 16 or 24) when pressed for 4 seconds or longer
-
-cv1: track 1
-cv2: track 2
-cv3: track 3
-cv4: track 4
-cv5: track 5
-cv6: track 6
+For user documentation of this script see file triggers.md
 
 """
 
