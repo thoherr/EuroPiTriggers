@@ -78,7 +78,6 @@ rectangle.
 | b1 | klick | toggle step at cursor (on/off) |
 | b1 | short (1-3 sec) | clear all steps in current track |
 | b1 | long (> 4 sec) | clear all steps |
-|------------|-------------------------|
 | b2 | klick | reset sequence to step 1 |
 | b2 | short (1-3 sec) | set end of sequence (loop end point) |
 | b2 | long (> 4 sec) | switch to next sequence length (8, 16 or 24) |
