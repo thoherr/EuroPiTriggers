@@ -26,7 +26,7 @@ The screen shows the sequencer pattern, which is divided into 6 tracks (correspo
 
 The initial screen looks like this:
 
-![UI Elements](./triggers-docs/cEuroPiTrigger-UI-ElementsEuroPiTrigger-UI-Elements.jpg)
+![UI Elements](./triggers-docs/EuroPiTrigger-UI-Elements.jpg)
 
 Every row represents one track (1-6), which is routed to the corresponding output (cv1-cv6).
 
@@ -50,7 +50,7 @@ is shown by a vertical line behind the last step.
 
 Activated steps are shown as filled rectangles, as you can see in the next picture.
 
-![Triggers](./triggers-docs/cEuroPiTrigger-UI-ElementsEuroPiTrigger-Triggersetting.jpg)
+![Triggers](./triggers-docs/EuroPiTrigger-Triggersetting.jpg)
 
 When a trigger is set at a step in a track, the corresponding position is shown as filled
 rectangle.
@@ -78,7 +78,6 @@ rectangle.
 | b1 | klick | toggle step at cursor (on/off) |
 | b1 | short (1-3 sec) | clear all steps in current track |
 | b1 | long (> 4 sec) | clear all steps |
-|------------|-------------------------|
 | b2 | klick | reset sequence to step 1 |
 | b2 | short (1-3 sec) | set end of sequence (loop end point) |
 | b2 | long (> 4 sec) | switch to next sequence length (8, 16 or 24) |
