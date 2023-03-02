@@ -11,7 +11,7 @@ from utime import ticks_diff, ticks_ms
 from europi import *
 from europi_script import EuroPiScript
 
-VERSION = "0.2"
+VERSION = "0.3"
 
 TRACKS = 6
 MAX_STEPS = 24
@@ -21,6 +21,7 @@ SAVE_STATE_INTERVAL = 5000
 SHORT_PRESSED_INTERVAL = 600  # feels about 1 second
 LONG_PRESSED_INTERVAL = 2400  # feels about 4 seconds
 
+SCREEN_SAVER_TIMEOUT= 10000
 
 class Triggers(EuroPiScript):
     initial_state = [[False] * MAX_STEPS for _ in range(TRACKS)]
@@ -37,6 +38,11 @@ class Triggers(EuroPiScript):
         self.looped_steps = self.sequence_steps
         self.state = self.initial_state
         self.current_step = 0
+        self.cursor_track = 0
+        self.cursor_step = 0
+
+        self.last_user_interaction = ticks_ms()
+        self.last_clock = ticks_ms()
 
         self.load_state()
 
@@ -44,7 +50,9 @@ class Triggers(EuroPiScript):
 
         @b1.handler_falling
         def handle_falling_b1():
-            time_pressed = ticks_diff(ticks_ms(), b1.last_pressed())
+            now = ticks_ms()
+            self.last_user_interaction = now
+            time_pressed = ticks_diff(now, b1.last_pressed())
             if time_pressed >= LONG_PRESSED_INTERVAL:
                 self.clear_all_tracks()
             elif time_pressed >= SHORT_PRESSED_INTERVAL:
@@ -56,7 +64,9 @@ class Triggers(EuroPiScript):
 
         @b2.handler_falling
         def handle_falling_b2():
-            time_pressed = ticks_diff(ticks_ms(), b2.last_pressed())
+            now = ticks_ms()
+            self.last_user_interaction = now
+            time_pressed = ticks_diff(now, b2.last_pressed())
             if time_pressed >= LONG_PRESSED_INTERVAL:
                 self.iterate_sequence_steps()
                 self.state_saved = False
@@ -71,6 +81,7 @@ class Triggers(EuroPiScript):
         def clock():
             self.current_step = (self.current_step + 1) % self.looped_steps
             self.update_cvs()
+            self.last_clock = ticks_ms()
 
         @din.handler_falling
         def reset_cvs():
@@ -115,6 +126,7 @@ class Triggers(EuroPiScript):
 
     def set_step_count(self):
         self.looped_steps = self.cursor_step + 1
+        self.state_saved = False
         if self.current_step > self.cursor_step:
             self.jump_to_start()
 
@@ -143,8 +155,15 @@ class Triggers(EuroPiScript):
         self.display_data_changed = True
 
     def read_cursor(self):
-        self.cursor_track = k1.range(TRACKS)
-        self.cursor_step = k2.range(self.sequence_steps)
+        now = ticks_ms()
+        track = k1.range(TRACKS)
+        if self.cursor_track != track:
+            self.cursor_track = track
+            self.last_user_interaction = now
+        step = k2.range(self.sequence_steps)
+        if self.cursor_step != step:
+            self.cursor_step = step
+            self.last_user_interaction = now
 
     def paint_single_step_state(self, track, step, status):
         y = 1 + int((OLED_HEIGHT / TRACKS) * track)
@@ -169,21 +188,27 @@ class Triggers(EuroPiScript):
         oled.vline(x, 0, OLED_HEIGHT, 1)
 
     def update_display(self):
+        now = ticks_ms()
         if self.display_data_changed:
             oled.fill(0)
 
-            for i in range(TRACKS):
-                for j in range(self.sequence_steps):
-                    self.paint_single_step_state(i, j, self.state[i][j])
+            if ticks_diff(now, self.last_user_interaction) < SCREEN_SAVER_TIMEOUT:
+                for i in range(TRACKS):
+                    for j in range(self.sequence_steps):
+                        self.paint_single_step_state(i, j, self.state[i][j])
 
-            self.paint_current_step_position(self.current_step)
+                if self.looped_steps < self.sequence_steps:
+                    self.paint_end_of_loop(self.looped_steps)
 
-            if self.looped_steps < self.sequence_steps:
-                self.paint_end_of_loop(self.looped_steps)
+            if ticks_diff(now, self.last_clock) < SCREEN_SAVER_TIMEOUT:
+                self.paint_current_step_position(self.current_step)
 
             oled.show()
-
             self.display_data_changed = False
+        else:
+            if ticks_diff(now, self.last_clock) >= SCREEN_SAVER_TIMEOUT:
+                oled.fill(0)
+                oled.show()
 
     def main(self):
         oled.centre_text(f"EuroPi Triggers\n{VERSION}")
