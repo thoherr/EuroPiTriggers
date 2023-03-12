@@ -55,6 +55,12 @@ Activated steps are shown as filled rectangles, as you can see in the next pictu
 When a trigger is set at a step in a track, the corresponding position is shown as filled
 rectangle.
 
+The CV outputs act as gate signales, i.e. they are *high* when the step is set at the corresponding track,
+and *low* on unset steps.
+
+A short clip of the module in action is [here](./triggers-docs/EuroPiTrigger-Running.mov).
+
+
 ## Inputs
 
 | **Port** | **Description**  |
