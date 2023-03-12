@@ -66,8 +66,8 @@ rectangle.
 
 ### Knobs
 
-| **Knob**  **Function** |
-|------------------------|
+| **Knob** | **Function** |
+|----------|--------------|
 | k1 | select track (1-6) |
 | k2 | select sequence step (1-8/16/24) |
 
