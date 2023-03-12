@@ -57,41 +57,41 @@ rectangle.
 
 ## Inputs
 
-| **Port** | **Description** |
-|----------|-----------------|
-| din | clock (one step) |
-| ain | not used |
+| **Port** | **Description**  |
+|----------|------------------|
+| din      | clock (one step) |
+| ain      | not used         |
 
 ## Controls
 
 ### Knobs
 
-| **Knob** | **Function** |
-|----------|--------------|
-| k1 | select track (1-6) |
-| k2 | select sequence step (1-8/16/24) |
+| **Knob** | **Function**                     |
+|----------|----------------------------------|
+| k1       | select track (1-6)               |
+| k2       | select sequence step (1-8/16/24) |
 
 ### Buttons
 
-| **Button** | **Press**  **Function** |
-|------------|-------------------------|
-| b1 | klick | toggle step at cursor (on/off) |
-| b1 | short (1-3 sec) | clear all steps in current track |
-| b1 | long (> 4 sec) | clear all steps |
-| b2 | klick | reset sequence to step 1 |
-| b2 | short (1-3 sec) | set end of sequence (loop end point) |
-| b2 | long (> 4 sec) | switch to next sequence length (8, 16 or 24) |
+| **Button** | **Press**       | **Function**                                 |
+|------------|-----------------|----------------------------------------------|
+| b1         | klick           | toggle step at cursor (on/off)               |
+| b1         | short (1-3 sec) | clear all steps in current track             |
+| b1         | long (> 4 sec)  | clear all steps                              |
+| b2         | klick           | reset sequence to step 1                     |
+| b2         | short (1-3 sec) | set end of sequence (loop end point)         |
+| b2         | long (> 4 sec)  | switch to next sequence length (8, 16 or 24) |
 
 ## Outputs
 
-| **Port** | **Description** |
-|----------|-----------------|
-| cv1 | track 1 (high = on, low = of at current step) |
-| cv2 | track 2 (high = on, low = of at current step) |
-| cv3 | track 3 (high = on, low = of at current step) |
-| cv4 | track 4 (high = on, low = of at current step) |
-| cv5 | track 5 (high = on, low = of at current step) |
-| cv6 | track 6 (high = on, low = of at current step) |
+| **Port** | **Description**                               |
+|----------|-----------------------------------------------|
+| cv1      | track 1 (high = on, low = of at current step) |
+| cv2      | track 2 (high = on, low = of at current step) |
+| cv3      | track 3 (high = on, low = of at current step) |
+| cv4      | track 4 (high = on, low = of at current step) |
+| cv5      | track 5 (high = on, low = of at current step) |
+| cv6      | track 6 (high = on, low = of at current step) |
 
 ## Enhancements / Ideas
 
